@@ -1,0 +1,116 @@
+﻿@page "/trainingtypes"
+
+<h3>Tipos de Competencias</h3>
+
+@if (trainingTypes == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tipo</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var trainingType in trainingTypes)
+            {
+                <tr>
+                    <td>@trainingType.Id</td>
+                    <td>@trainingType.Type</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => EditTrainingType(trainingType)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => DeleteTrainingType(trainingType.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button class="btn btn-success" @onclick="AddTrainingType">Añadir Tipo</button>
+
+    @if (showModal)
+    {
+        <div class="modal" style="display: flex;">
+            <div class="modal-content">
+                <button class="close-button" @onclick="CloseModal">×</button>
+                <h4 class="mt-2">@(isEditMode ? "Edit" : "") Tipo de Competencia</h4>
+                <form>
+                    <div class="form-group">
+                        <label for="type">Tipo:</label>
+                        <input type="text" class="form-control mt-3 mb-3" id="type" @bind="currentTrainingType.Type" />
+                    </div>
+                    <button type="button" class="btn btn-primary" @onclick="SaveTrainingType">Guardar</button>
+                </form>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    List<TrainingTypes> trainingTypes;
+    TrainingTypes currentTrainingType;
+    bool showModal = false;
+    bool isEditMode = false;
+
+    [Inject]
+    private HttpClient HttpClient { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTrainingTypes();
+    }
+
+    private async Task LoadTrainingTypes()
+    {
+        trainingTypes = await HttpClient.GetFromJsonAsync<List<TrainingTypes>>("api/TrainingType");
+    }
+
+    
+    private void EditTrainingType(TrainingTypes trainingType)
+    {
+        currentTrainingType = trainingType;
+        isEditMode = true;
+        showModal = true;
+    }
+
+    private async Task SaveTrainingType()
+    {
+        if (isEditMode)
+        {
+            await HttpClient.PutAsJsonAsync("api/TrainingType/" + currentTrainingType.Id, currentTrainingType);
+        }
+        else
+        {
+            await HttpClient.PostAsJsonAsync("api/TrainingType", currentTrainingType);
+        }
+
+        await LoadTrainingTypes();
+        CloseModal();
+    }
+
+    private async Task DeleteTrainingType(int id)
+    {
+        await HttpClient.DeleteAsync("api/TrainingType/" + id);
+        await LoadTrainingTypes();
+    }
+
+    private void AddTrainingType()
+    {
+        Console.WriteLine("AddTrainingType called");
+        currentTrainingType = new TrainingTypes();
+        isEditMode = false;
+        showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        Console.WriteLine("CloseModal called");
+        showModal = false;
+    }
+
+}
