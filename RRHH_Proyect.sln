@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34525.116
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RRHH_Proyect.Server", "RRHH_Proyect\Server\RRHH_Proyect.Server.csproj", "{84216B25-671E-4E54-AFDE-9329E34F28D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RRHH_Proyect.Server", "RRHH_Proyect\Server\RRHH_Proyect.Server.csproj", "{84216B25-671E-4E54-AFDE-9329E34F28D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RRHH_Proyect.Client", "RRHH_Proyect\Client\RRHH_Proyect.Client.csproj", "{739C3973-52E2-4047-98F8-3A93D2AFEAB7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RRHH_Proyect.Client", "RRHH_Proyect\Client\RRHH_Proyect.Client.csproj", "{739C3973-52E2-4047-98F8-3A93D2AFEAB7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RRHH_Proyect.Shared", "RRHH_Proyect\Shared\RRHH_Proyect.Shared.csproj", "{0B03E6BA-EE7F-4420-9E71-B2DC80D393B4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RRHH_Proyect.Shared", "RRHH_Proyect\Shared\RRHH_Proyect.Shared.csproj", "{0B03E6BA-EE7F-4420-9E71-B2DC80D393B4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
