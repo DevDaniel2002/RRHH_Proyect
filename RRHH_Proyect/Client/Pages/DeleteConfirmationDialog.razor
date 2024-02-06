@@ -1,0 +1,32 @@
+﻿@inherits Microsoft.AspNetCore.Components.ComponentBase
+
+<MudDialogContent>
+    <p>¿Está seguro de que desea eliminar este registro?</p>
+</MudDialogContent>
+
+<MudDialogActions>
+    <MudButton Color="Color.Error" @onclick="ConfirmDelete">Sí, Eliminar</MudButton>
+    <MudButton Color="Color.Secondary" @onclick="CancelDelete">Cancelar</MudButton>
+</MudDialogActions>
+
+@code {
+    [Inject]
+    private IDialogService DialogService { get; set; }
+
+    private DialogReference dialogReference;
+
+    public void SetDialogReference(DialogReference reference)
+    {
+        dialogReference = reference;
+    }
+
+    private void ConfirmDelete()
+    {
+        dialogReference.Close(DialogResult.Ok(true));
+    }
+
+    private void CancelDelete()
+    {
+        dialogReference.Close(DialogResult.Cancel());
+    }
+}

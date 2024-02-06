@@ -1,26 +1,10 @@
 ﻿@page "/"
 
-@* <PageTitle>Index</PageTitle>
+ <PageTitle>Index</PageTitle>
 
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
 
-<SurveyPrompt Title="How is Blazor working for you?" /> *@
+<SurveyPrompt Title="How is Blazor working for you?" /> 
 
-@inject HttpClient Http
-
-<EditForm Model="NewTrainingType">
-    <InputText @bind-Value=NewTrainingType.Type></InputText>
-
-    <button @onclick="(()=>CreateTrainingType(NewTrainingType))">Crear Tipo</button>
-</EditForm>
-
-@code {
-    TrainingTypes NewTrainingType = new TrainingTypes();
-
-    public async Task CreateTrainingType(TrainingTypes trainingTypes)
-    {
-        var result = await Http.PostAsJsonAsync("api/TrainingTypes", trainingTypes);
-    }
-}
