@@ -22,7 +22,7 @@ namespace RRHH_Proyect.Server.Controllers
         public async Task<ActionResult<List<TrainingTypes>>> GetAllTrainingTypes()
         {
             var list = await _context.TrainingTypes
-                .Where(t => t.IsActive)  // Agregar condición de filtro
+                .Where(t => t.IsActive)
                 .ToListAsync();
 
             return Ok(list);

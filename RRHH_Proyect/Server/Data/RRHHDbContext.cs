@@ -11,6 +11,10 @@ namespace RRHH_Proyect.Server.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Trainings>()
+            .HasOne(t => t.TrainingType)
+            .WithMany()
+            .HasForeignKey(t => t.TrainingTypeId);
         }
 
         public DbSet<TrainingTypes> TrainingTypes { get; set; }
