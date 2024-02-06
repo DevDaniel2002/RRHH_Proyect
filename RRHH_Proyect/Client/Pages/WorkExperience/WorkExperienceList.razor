@@ -1,0 +1,109 @@
+﻿@page "/WorkExperienceList"
+@inject HttpClient HttpClient
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+    <MudText Typo="Typo.h3" Class=" pt-4"> Experiencias de Trabajo </MudText>
+
+    <MudTable Items="WorkExperiencesList.FindAll(x=>x.IsActive == true)" Hover="true" Striped="true" OnRowClick="(TableRowClickEventArgs<WorkExperience> args) => RowClicked(args)">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6"> Experiencias de Trabajo </MudText>
+
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Empresa</MudTh>
+            <MudTh>Puesto</MudTh>
+            <MudTh>Salario</MudTh>
+            <MudTh>Desde</MudTh>
+            <MudTh>Hasta</MudTh>
+
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Company</MudTd>
+                <MudTd>@context.Position</MudTd>
+                <MudTd>@context.Salary.ToString("#,##0.00")</MudTd>
+                <MudTd>@context.DateFrom?.ToString("dd/MM/yyyy")</MudTd>
+                <MudTd>@context.DateTo?.ToString("dd/MM/yyyy")</MudTd>
+                <MudTd> <MudFab Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.Delete" OnClick="()=>DeleteExperience(context)" /> </MudTd>
+
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    </MudContainer>
+
+    @code {
+    public List<WorkExperience> WorkExperiencesList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await GetWorkExperience();
+
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Experiencias de Trabajo", parameter);
+            var resultDialog = await dialog.Result;
+        }
+    }
+
+    private async Task GetWorkExperience()
+    {
+        var result = await HttpClient.GetFromJsonAsync<List<WorkExperience>>("api/WorkExperiences/GetWorkExperiences");
+
+        if (result?.Count > 0)
+            WorkExperiencesList = result;
+    }
+
+    private async Task DeleteExperience(WorkExperience experienceToDelete)
+    {
+        try
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", "Seguro que desea eliminar esta información?");
+            var dialog = DialogService.Show<ConfirmationDialog>("Experiencias de Trabajo", parameter);
+            var resultDialog = await dialog.Result;
+
+            if (!resultDialog.Canceled)
+            {
+
+                var result = await HttpClient.DeleteAsync($"api/WorkExperiences/DeleteWorkExperience/{experienceToDelete.Id}");
+
+                if (result.IsSuccessStatusCode)
+                {
+                    parameter = new DialogParameters();
+                    parameter.Add("Message", "Experiencia de trabajo Eliminada");
+                    dialog = DialogService.Show<SuccessDialog>("Experiencias de Trabajo", parameter);
+                    resultDialog = await dialog.Result;
+                    await GetWorkExperience();
+                }
+                else
+                {
+                    throw new Exception(result.StatusCode.ToString());
+                }
+            }
+
+
+
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Experiencias de Trabajo", parameter);
+            var resultDialog = await dialog.Result;
+        }
+    }
+
+    private async Task RowClicked(TableRowClickEventArgs<WorkExperience> args)
+    {
+        NavigationManager.NavigateTo($"WorkExperienceForm/{args.Item.Id}");
+    }
+}

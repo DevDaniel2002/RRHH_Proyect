@@ -5,7 +5,7 @@ using RRHH_Proyect.Shared;
 
 namespace RRHH_Proyect.Server.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/WorkExperiences")]
     [ApiController]
     public class WorkExperienceController : ControllerBase
     {
@@ -24,6 +24,7 @@ namespace RRHH_Proyect.Server.Controllers
                 if (workExperience == null)
                     throw new Exception("El objeto a registrar es nulo");
 
+                workExperience.IsActive = true;
                 DbContext.WorkExperience.Add(workExperience);
                 await DbContext.SaveChangesAsync();
 
@@ -42,9 +43,24 @@ namespace RRHH_Proyect.Server.Controllers
             {
                 var WorkExperiences = await DbContext.WorkExperience.ToListAsync();
 
-                return Ok(WorkExperiences);
+                return Ok(WorkExperiences.FindAll(x=>x.IsActive == true));
             }
             catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("GetWorkExperiencesById/{id}")]
+        public async Task<ActionResult<WorkExperience>> GetById(int id)
+        {
+            try
+            {
+                var WorkExperience = await DbContext.WorkExperience.FirstOrDefaultAsync(x=>x.Id == id);
+
+                return Ok(WorkExperience);
+            }
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -59,8 +75,13 @@ namespace RRHH_Proyect.Server.Controllers
 
                 if (result == null)
                     throw new Exception("Work Experience Not Found");
-
-                result = workExperience;
+                result.Company = workExperience.Company;
+                result.Position = workExperience.Position;
+                result.Salary = workExperience.Salary;
+                result.DateFrom = workExperience.DateFrom;
+                result.DateTo = workExperience.DateTo;
+                result.IsActive = true;               
+                
 
                 await DbContext.SaveChangesAsync();
 
