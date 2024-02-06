@@ -20,7 +20,9 @@ namespace RRHH_Proyect.Server.Controllers
         [HttpGet]
         public async Task<ActionResult<List<Trainings>>> GetAllTrainings()
         {
-            var list = await _context.Trainings.ToListAsync();
+            var list = await _context.Trainings
+                .Where(t => t.IsActive)
+                .ToListAsync();
 
             return Ok(list);
         }
@@ -28,7 +30,9 @@ namespace RRHH_Proyect.Server.Controllers
         [HttpGet]
         public async Task<ActionResult<List<Trainings>>> GetTrainingById(int Id)
         {
-            var training = await _context.Trainings.FirstOrDefaultAsync(ob => ob.Id == Id);
+            var training = await _context.Trainings
+                .Where(t => t.Id == Id && t.IsActive)
+                .FirstOrDefaultAsync();
 
             if (training == null)
             {
@@ -41,6 +45,8 @@ namespace RRHH_Proyect.Server.Controllers
         [HttpPost]
         public async Task<ActionResult<Trainings>> CreateTraining(Trainings trainings)
         {
+            trainings.IsActive = true;
+
             _context.Trainings.Add(trainings);
             await _context.SaveChangesAsync();
 
@@ -50,7 +56,7 @@ namespace RRHH_Proyect.Server.Controllers
         [HttpPut("{Id}")]
         public async Task<ActionResult<List<Trainings>>> UpdateTrainings(Trainings trainings)
         {
-            var obj = await _context.Trainings.FindAsync(trainings);
+            var obj = await _context.Trainings.FindAsync(trainings.Id);
             if (obj == null)
             {
                 return BadRequest("No se encuentra la competencia");
@@ -73,7 +79,7 @@ namespace RRHH_Proyect.Server.Controllers
                 return NotFound("No existe :/");
             }
 
-            _context.Trainings.Remove(obj);
+            obj.IsActive = false;
             await _context.SaveChangesAsync();
             return Ok(await GetDbTrainings());
         }

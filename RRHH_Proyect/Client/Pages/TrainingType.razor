@@ -1,116 +1,131 @@
 ﻿@page "/trainingtypes"
+@using MudBlazor
+@using MudBlazor.Components
+@using MudBlazor.Services
 
-<h3>Tipos de Competencias</h3>
 
-@if (trainingTypes == null)
-{
-    <p>Loading...</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Tipo</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var trainingType in trainingTypes)
+<MudContainer>
+    <h3>Tipos de Competencias</h3>
+
+    <MudTable Items="@trainingTypes">
+        <HeaderContent>
+            <th>ID</th>
+            <th>Tipo</th>
+            <th></th>
+        </HeaderContent>
+        <RowTemplate>
+            <td>@context.Id</td>
+            <td>@context.Type</td>
+            <td>
+                <MudButton Color="Color.Warning" Variant="Variant.Filled" @onclick="() => EditTrainingType(context)" StartIcon="@Icons.Material.Filled.Edit">Editar</MudButton>
+                <MudButton Color="Color.Error" Variant="Variant.Filled" @onclick="() => ShowDeleteConfirmationModal(context.Id)" StartIcon="@Icons.Material.Filled.Delete">Eliminar</MudButton>
+            </td>
+        </RowTemplate>
+    </MudTable>
+
+    <MudButton Color="Color.Primary" Class="mt-2 mb-2" @onclick="() => ShowTrainingTypeDialog(false)">Añadir Tipo</MudButton>
+
+    <MudDialogProvider />
+
+    @code {
+        List<TrainingTypes> trainingTypes;
+        TrainingTypes currentTrainingType;
+        bool isEditMode = false;
+        int trainingTypeIdToDelete;
+        DialogReference dialogReference;
+
+        private TaskCompletionSource<bool> dialogClosedTaskCompletionSource;
+
+
+        [Inject]
+        private IDialogService DialogService { get; set; }
+
+        [Inject]
+        private HttpClient HttpClient { get; set; }
+
+        protected override async Task OnInitializedAsync()
+        {
+            await GetAllTrainingTypes();
+        }
+
+        private async Task GetAllTrainingTypes()
+        {
+            trainingTypes = await HttpClient.GetFromJsonAsync<List<TrainingTypes>>("api/TrainingType");
+        }
+
+        private void EditTrainingType(TrainingTypes trainingType)
+        {
+            currentTrainingType = trainingType;
+            isEditMode = true;
+
+            var parameters = new DialogParameters();
+            parameters.Add("CurrentTrainingType", currentTrainingType);
+            parameters.Add("IsEditMode", isEditMode);
+
+            var options = new DialogOptions { MaxWidth = MaxWidth.Small };
+
+            var dialogReference = DialogService.Show<TrainingTypeDialog>("Editar Tipo", parameters, options);
+
+            _ = HandleDialogResult(dialogReference);
+        }
+
+        private async Task HandleDialogResult(IDialogReference dialogReference)
+        {
+            var result = await dialogReference.Result;
+
+            if (!result.Cancelled)
             {
-                <tr>
-                    <td>@trainingType.Id</td>
-                    <td>@trainingType.Type</td>
-                    <td>
-                        <button class="btn btn-primary" @onclick="() => EditTrainingType(trainingType)">Edit</button>
-                        <button class="btn btn-danger" @onclick="() => DeleteTrainingType(trainingType.Id)">Delete</button>
-                    </td>
-                </tr>
+                await GetAllTrainingTypes();
             }
-        </tbody>
-    </table>
-
-    <button class="btn btn-success" @onclick="AddTrainingType">Añadir Tipo</button>
-
-    @if (showModal)
-    {
-        <div class="modal" style="display: flex;">
-            <div class="modal-content">
-                <button class="close-button" @onclick="CloseModal">×</button>
-                <h4 class="mt-2">@(isEditMode ? "Edit" : "") Tipo de Competencia</h4>
-                <form>
-                    <div class="form-group">
-                        <label for="type">Tipo:</label>
-                        <input type="text" class="form-control mt-3 mb-3" id="type" @bind="currentTrainingType.Type" />
-                    </div>
-                    <button type="button" class="btn btn-primary" @onclick="SaveTrainingType">Guardar</button>
-                </form>
-            </div>
-        </div>
-    }
-}
-
-@code {
-    List<TrainingTypes> trainingTypes;
-    TrainingTypes currentTrainingType;
-    bool showModal = false;
-    bool isEditMode = false;
-
-    [Inject]
-    private HttpClient HttpClient { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadTrainingTypes();
-    }
-
-    private async Task LoadTrainingTypes()
-    {
-        trainingTypes = await HttpClient.GetFromJsonAsync<List<TrainingTypes>>("api/TrainingType");
-    }
-
-    
-    private void EditTrainingType(TrainingTypes trainingType)
-    {
-        currentTrainingType = trainingType;
-        isEditMode = true;
-        showModal = true;
-    }
-
-    private async Task SaveTrainingType()
-    {
-        if (isEditMode)
-        {
-            await HttpClient.PutAsJsonAsync("api/TrainingType/" + currentTrainingType.Id, currentTrainingType);
-        }
-        else
-        {
-            await HttpClient.PostAsJsonAsync("api/TrainingType", currentTrainingType);
         }
 
-        await LoadTrainingTypes();
-        CloseModal();
-    }
+        private async Task AddTrainingType()
+        {
+            currentTrainingType = new TrainingTypes();
+            isEditMode = false;
 
-    private async Task DeleteTrainingType(int id)
-    {
-        await HttpClient.DeleteAsync("api/TrainingType/" + id);
-        await LoadTrainingTypes();
-    }
+            var parameters = new DialogParameters();
+            parameters.Add("CurrentTrainingType", currentTrainingType);
+            parameters.Add("IsEditMode", isEditMode);
 
-    private void AddTrainingType()
-    {
-        Console.WriteLine("AddTrainingType called");
-        currentTrainingType = new TrainingTypes();
-        isEditMode = false;
-        showModal = true;
-    }
+            var options = new DialogOptions { MaxWidth = MaxWidth.Small };
 
-    private void CloseModal()
-    {
-        Console.WriteLine("CloseModal called");
-        showModal = false;
-    }
+            var dialogReference = DialogService.Show<TrainingTypeDialog>("Añadir Tipo", parameters, options);
 
-}
+            _ = HandleDialogResult(dialogReference);
+        }
+
+        private void ShowDeleteConfirmationModal(int id)
+        {
+            trainingTypeIdToDelete = id;
+
+            var options = new DialogOptions { MaxWidth = MaxWidth.Small };
+
+            DialogService.Show<DeleteConfirmationDialog>("Confirmar Eliminación", options);
+        }
+        
+        private async Task ShowTrainingTypeDialog(bool isEditMode)
+        {
+            currentTrainingType = new TrainingTypes();
+            this.isEditMode = isEditMode;
+
+            var parameters = new DialogParameters();
+            parameters.Add("CurrentTrainingType", currentTrainingType);
+            parameters.Add("IsEditMode", isEditMode);
+
+            var options = new DialogOptions { MaxWidth = MaxWidth.Small };
+
+            dialogClosedTaskCompletionSource = new TaskCompletionSource<bool>();
+
+            var dialogReference = DialogService.Show<TrainingTypeDialog>("Añadir Tipo", parameters, options);
+
+            await dialogClosedTaskCompletionSource.Task;
+
+            await GetAllTrainingTypes();
+        }
+
+
+
+ }
+ 
+</MudContainer>
