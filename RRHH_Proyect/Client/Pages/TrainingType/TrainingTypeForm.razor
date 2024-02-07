@@ -1,0 +1,117 @@
+﻿@page "/TrainingTypesForm"
+@page "/TrainingTypesForm/{Id}"
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager 
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.Small" Style="margin-top:20px;">
+    <MudText Align="Align.Left" Typo="Typo.h3">Tipo de Competencia</MudText>
+    <center>
+        <MudForm @ref="mudForm">
+            <MudPaper Height="600px" Width="100%">
+                <MudContainer MaxWidth="MaxWidth.Small">
+                    <MudIconButton Icon="@Icons.Material.Filled.SettingsApplications" Color="Color.Inherit" />
+                    <MudTextField Required="true" RequiredError="Campo Requerido" @bind-Value="trainingType.Type" Label="Tipo" Variant="Variant.Outlined" /> 
+                    <br />
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Large" OnClick="NavigateToIndex">Cancelar</MudButton>
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Send" Color="Color.Success" Size="Size.Large" OnClick="SaveChange">Guardar Cambios</MudButton>
+                </MudContainer>
+                @if (ProgressBar)
+                {
+                    <br />
+                    <MudProgressCircular Color="Color.Info" Size="Size.Medium" Indeterminate="true" />
+                    
+                }
+            </MudPaper>
+        </MudForm>
+    </center>
+</MudContainer>
+
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private bool ProgressBar = false;
+
+    TrainingTypes trainingType = new();
+
+    MudForm mudForm;
+
+    private int ID = 0;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            ProgressBar = true;
+            if (!string.IsNullOrEmpty(Id))
+            {
+                if (int.TryParse(Id, out int id))
+                {
+                    var result = await HttpClient.GetFromJsonAsync<TrainingTypes>($"api/TrainingTypes/GetTrainingTypeById/{id}");
+
+                    if (result == null)
+                        throw new Exception("Objeto No Encontrado");
+
+                    trainingType = result;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Tipos de Competencia", parameter);
+            var resultDialog = await dialog.Result;
+        }
+        finally
+        {
+            ProgressBar = false;
+        }
+    }
+
+    private void NavigateToIndex() => NavigationManager.NavigateTo("/");
+
+    private async Task SaveChange()
+    {
+        try
+        {
+            ProgressBar = true;
+            var result = new HttpResponseMessage();
+
+            mudForm?.Validate();
+
+            if (mudForm.IsValid)
+            {
+                if (!string.IsNullOrEmpty(Id))
+                    result = await HttpClient.PutAsJsonAsync<TrainingTypes>("api/TrainingTypes/UpdateTrainingType", trainingType);
+                else
+                    result = await HttpClient.PostAsJsonAsync<TrainingTypes>("api/TrainingTypes/CreateTrainingType", trainingType);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var parameter = new DialogParameters();
+                    parameter.Add("Message", string.IsNullOrEmpty(Id) ? "Tipo de Competencia registrada" : "Tipo de Competencia Actualizada");
+                    var dialog = DialogService.Show<SuccessDialog>("Tipo de Competencia", parameter);
+                    var resultDialog = await dialog.Result;
+                    NavigationManager.NavigateTo("TrainingTypesList");
+                }
+            }
+
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Tipos de Competencia", parameter);
+            var resultDialog = await dialog.Result;
+        }
+        finally
+        {
+            ProgressBar = false;
+        }
+    }
+
+}
+ 
