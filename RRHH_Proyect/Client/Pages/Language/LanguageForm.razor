@@ -1,20 +1,17 @@
-﻿@page "/WorkExperienceForm"
-@page "/WorkExperienceForm/{Id}"
+﻿@page "/LanguageForm"
+@page "/LanguageForm/{Id}"
 @inject HttpClient HttpClient
-@inject NavigationManager NavigationManager 
+@inject NavigationManager NavigationManager
 @inject IDialogService DialogService
 <MudContainer MaxWidth="MaxWidth.Small" Style="margin-top:20px;">
-    <MudText Align="Align.Left" Typo="Typo.h3">Experiencias de Trabajo</MudText>
+    <MudText Align="Align.Left" Typo="Typo.h3">Idiomas</MudText>
     <center>
         <MudForm @ref="mudForm">
             <MudPaper Height="600px" Width="100%">
                 <MudContainer MaxWidth="MaxWidth.Small">
-                    <MudIconButton Icon="@Icons.Material.Filled.Work" Color="Color.Inherit" />
-                    <MudTextField Required="true" RequiredError="Campo Requerido" @bind-Value="workExperience.Company" Label="Empresa" Variant="Variant.Outlined" /><br />
-                    <MudTextField Required="true" RequiredError="Campo Requerido" @bind-Value="workExperience.Position" Label="Posición" Variant="Variant.Outlined" /><br />
-                    <MudNumericField Required="true" RequiredError="Campo Requerido" @bind-Value="workExperience.Salary" Label="Salario" Variant="Variant.Outlined" /><br />
-                    <MudDatePicker Required="true" RequiredError="Campo Requerido" @bind-Date="workExperience.DateFrom" Label="Desde" Variant="Variant.Outlined"/>
-                    <MudDatePicker Required="true" RequiredError="Campo Requerido" @bind-Date="workExperience.DateTo" Label="Hasta" Variant="Variant.Outlined" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Language" Color="Color.Inherit" />
+                    <MudTextField Required="true" RequiredError="Campo Requerido" @bind-Value="language.Name" Label="Nombre:" Variant="Variant.Outlined" /><br />
+                    <MudTextField Required="true" RequiredError="Campo Requerido" @bind-Value="language.Level" Label="Nivel" Variant="Variant.Outlined" /><br />
                     <br />
                     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Large" OnClick="NavigateToIndex">Cancelar</MudButton>
                     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Send" Color="Color.Success" Size="Size.Large" OnClick="SaveChanges">Guardar Cambios</MudButton>
@@ -25,17 +22,17 @@
                     <MudProgressCircular Color="Color.Info" Size="Size.Medium" Indeterminate="true" />
                 }
             </MudPaper>
-        </MudForm> 
+        </MudForm>
     </center>
 </MudContainer>
 
 @code {
     [Parameter]
-    public string Id{ get; set; }
+    public string Id { get; set; }
 
     private bool ProgressBar = false;
 
-    WorkExperience workExperience = new();
+    Language language = new();
 
     MudForm mudForm;
 
@@ -50,21 +47,21 @@
             {
                 if (int.TryParse(Id, out int id))
                 {
-                    var result = await HttpClient.GetFromJsonAsync<WorkExperience>($"api/WorkExperiences/GetWorkExperiencesById/{id}");
+                    var result = await HttpClient.GetFromJsonAsync<Language>($"api/Language/GetLanguageById/{id}");
 
                     if (result == null)
                         throw new Exception("Objeto no encontrado");
 
-                    workExperience = result;
+                    language = result;
                 }
 
             }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             var parameter = new DialogParameters();
             parameter.Add("Message", ex.Message);
-            var dialog = DialogService.Show<ErrorDialog>("Experiencias de Trabajo", parameter);
+            var dialog = DialogService.Show<ErrorDialog>("Idiomas", parameter);
             var resultDialog = await dialog.Result;
         }
         finally
@@ -87,27 +84,25 @@
             if (mudForm.IsValid)
             {
                 if (!string.IsNullOrEmpty(Id))
-                    result = await HttpClient.PutAsJsonAsync<WorkExperience>("api/WorkExperiences/UpdateWorkExperience", workExperience);
+                    result = await HttpClient.PutAsJsonAsync<Language>("api/Language/UpdateLanguage", language);
                 else
-                    result = await HttpClient.PostAsJsonAsync<WorkExperience>("api/WorkExperiences/PostWorkExperience", workExperience);
+                    result = await HttpClient.PostAsJsonAsync<Language>("api/Language/PostLanguage", language);
 
                 if (result.IsSuccessStatusCode)
                 {
                     var parameter = new DialogParameters();
-                    parameter.Add("Message", string.IsNullOrEmpty(Id) ? "Experiencia de trabajo registrada" : "Experiencia de Trabajo Actualizada");
-                    var dialog = DialogService.Show<SuccessDialog>("Experiencias de Trabajo", parameter);
-                    var resultDialog = await dialog.Result;
-                    NavigationManager.NavigateTo("WorkExperienceList");
+                    parameter.Add("Message", string.IsNullOrEmpty(Id) ? "Idioma registrado" : "Idioma Actualizado");
+
                 }
             }
 
-            
+
         }
         catch (Exception ex)
         {
             var parameter = new DialogParameters();
             parameter.Add("Message", ex.Message);
-            var dialog = DialogService.Show<ErrorDialog>("Experiencias de Trabajo", parameter);
+            var dialog = DialogService.Show<ErrorDialog>("Idiomas", parameter);
             var resultDialog = await dialog.Result;
         }
         finally
@@ -115,6 +110,6 @@
             ProgressBar = false;
         }
 
-        
+
     }
 }

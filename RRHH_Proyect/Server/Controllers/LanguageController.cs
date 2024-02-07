@@ -5,7 +5,7 @@ using RRHH_Proyect.Shared;
 
 namespace RRHH_Proyect.Server.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/Language")]
     [ApiController]
     public class LanguageController : ControllerBase
     {
@@ -16,71 +16,105 @@ namespace RRHH_Proyect.Server.Controllers
             DbContext = dbcontext;
         }
 
-        // GET: api/Language
+        // GET
         [HttpGet("GetLanguage")]
-        public IActionResult Get()
+        public async Task<ActionResult<List<Language>>> ReadAsync()
         {
-            var languages = DbContext.Language.ToList();
-            return Ok(languages);
-        }
-
-        // GET: api/Language/1
-        [HttpGet("{id}")]
-        public IActionResult Get(int id)
-        {
-            var language = DbContext.Language.Find(id);
-            if (language == null)
+            try
             {
-                return NotFound(); //  Not Found
+                var Languages = await DbContext.Language.ToListAsync();
+
+                return Ok(Languages.FindAll(x => x.IsActive == true));
             }
-
-            return Ok(language);
-        }
-
-        // POST: api/Language
-        [HttpPost]
-        public IActionResult Post([FromBody] Language newLanguage)
-        {
-            DbContext.Language.Add(newLanguage);
-            DbContext.SaveChanges();
-
-            return CreatedAtAction(nameof(Get), new { id = newLanguage.Id }, newLanguage);
-        }
-
-        // PUT: api/Language/1
-        [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody] Language updatedLanguage)
-        {
-            var language = DbContext.Language.Find(id);
-            if (language == null)
+            catch (Exception ex)
             {
-                return NotFound(); //  Not Found
+                return BadRequest(ex.Message);
             }
-
-            // Actualizar propiedades del idioma
-            language.Name = updatedLanguage.Name;
-            language.Level = updatedLanguage.Level;
-            language.IsActive = updatedLanguage.IsActive;
-
-            DbContext.SaveChanges();
-
-            return NoContent(); //  No Content
         }
 
-        // DELETE: api/Language/1
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        [HttpGet("GetLanguageById/{id}")]
+        public async Task<ActionResult<Language>> GetById(int id)
         {
-            var language = DbContext.Language.Find(id);
-            if (language == null)
+            try
             {
-                return NotFound(); //  Not Found
+                var Language = await DbContext.Language.FirstOrDefaultAsync(x => x.Id == id);
+
+                return Ok(Language);
             }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
-            DbContext.Language.Remove(language);
-            DbContext.SaveChanges();
 
-            return NoContent(); //  No Content
+        // POST
+        [HttpPost("PostLanguage")]
+        public async Task<ActionResult<Language>> CreateAsync(Language language)
+        {
+            try
+            {
+                if (language == null)
+                    throw new Exception("El objeto a registrar es nulo");
+
+                language.IsActive = true;
+                DbContext.Language.Add(language);
+                await DbContext.SaveChangesAsync();
+
+                return new ObjectResult(language) { StatusCode = StatusCodes.Status201Created };
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // PUT
+        [HttpPut("UpdateLanguage")]
+        public async Task<ActionResult<Language>> UpdateAsync(Language language)
+        {
+            try
+            {
+                var result = await DbContext.Language.FindAsync(language.Id);
+
+                if (result == null)
+                    throw new Exception("Language Not Found");
+                result.Name = language.Name;
+                result.Level = language.Level;
+                result.IsActive = true;
+
+
+                await DbContext.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+        // DELETE
+        [HttpDelete("DeleteLanguage")]
+        public async Task<ActionResult<Language>> DeleteAsync(int id)
+        {
+            try
+            {
+                var result = await DbContext.Language.FindAsync(id);
+
+                if (result == null)
+                    throw new Exception("Language Not Found");
+                result.IsActive = false;
+
+                await DbContext.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
 
 
 
