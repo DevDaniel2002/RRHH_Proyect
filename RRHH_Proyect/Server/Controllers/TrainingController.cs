@@ -6,7 +6,7 @@ using RRHH_Proyect.Shared;
 
 namespace RRHH_Proyect.Server.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/Trainings")]
     [ApiController]
     public class TrainingController : ControllerBase
     {
@@ -17,71 +17,111 @@ namespace RRHH_Proyect.Server.Controllers
             _context = context;
         }
 
-        [HttpGet]
+        [HttpGet("GetAllTrainings")]
         public async Task<ActionResult<List<Trainings>>> GetAllTrainings()
         {
-            var list = await _context.Trainings
-                .Where(t => t.IsActive)
-                .ToListAsync();
+            try
+            {
+                var list = await _context.Trainings
+                    .Where(t => t.IsActive)
+                    .ToListAsync();
 
-            return Ok(list);
+                return Ok(list);
+
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
         }
 
-        [HttpGet]
+        [HttpGet("GetTrainingById/{Id}")]
         public async Task<ActionResult<List<Trainings>>> GetTrainingById(int Id)
         {
-            var training = await _context.Trainings
-                .Where(t => t.Id == Id && t.IsActive)
-                .FirstOrDefaultAsync();
-
-            if (training == null)
+            try
             {
-                return NotFound(" /");
-            }
+                var trainingType = await _context.TrainingTypes
+                    .Where(t => t.Id == Id && t.IsActive)
+                    .FirstOrDefaultAsync();
+                return Ok(trainingType);
 
-            return Ok(training);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        [HttpPost]
+        [HttpPost("CreateTraining")]
         public async Task<ActionResult<Trainings>> CreateTraining(Trainings trainings)
         {
-            trainings.IsActive = true;
-
-            _context.Trainings.Add(trainings);
-            await _context.SaveChangesAsync();
-
-            return Ok(await GetDbTrainings());
-        }
-
-        [HttpPut("{Id}")]
-        public async Task<ActionResult<List<Trainings>>> UpdateTrainings(Trainings trainings)
-        {
-            var obj = await _context.Trainings.FindAsync(trainings.Id);
-            if (obj == null)
+            try
             {
-                return BadRequest("No se encuentra la competencia");
+                trainings.IsActive = true;
+
+                _context.Trainings.Add(trainings);
+                await _context.SaveChangesAsync();
+
+                return Ok(await GetDbTrainings());
             }
-            obj.Description = trainings.Description;
+            catch (Exception ex)
+            {
 
-            await _context.SaveChangesAsync();
-
-            return Ok(await _context.Trainings.ToListAsync());
+                return BadRequest(ex.Message);
+            }
         }
 
-        [HttpDelete]
-        [Route("{Id}")]
+        [HttpPut("UpdateTraining/{Id}")]
+        public async Task<ActionResult<List<Trainings>>> UpdateTrainings(Trainings training)
+        {
+            try
+            {
+                var result = await _context.Trainings.FindAsync(training.Id);
+                if (result == null)
+                {
+                    return BadRequest("No se encuentra la competencia");
+                }
+                result.Description = training.Description;
+                result.TrainingTypeId = training.TrainingTypeId;
+                result.DateFrom = training.DateFrom;
+                result.DateTo = training.DateTo;
+                result.Institution = training.Institution;
+                result.IsActive = true;
+
+
+                await _context.SaveChangesAsync();
+
+                return Ok(await _context.Trainings.ToListAsync());
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete("DeleteTraining/{Id}")]
+        //[Route("{Id}")]
         public async Task<ActionResult<List<Trainings>>> DeleteTraining(int Id)
         {
-            var obj = await _context.Trainings.FirstOrDefaultAsync(Ob => Ob.Id == Id);
-
-            if (obj == null)
+            try
             {
-                return NotFound("No existe :/");
-            }
+                var obj = await _context.Trainings.FirstOrDefaultAsync(Ob => Ob.Id == Id);
 
-            obj.IsActive = false;
-            await _context.SaveChangesAsync();
-            return Ok(await GetDbTrainings());
+                if (obj == null)
+                {
+                    return NotFound("No existe :/");
+                }
+
+                obj.IsActive = false;
+                await _context.SaveChangesAsync();
+                return Ok(await GetDbTrainings());
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         private async Task<List<Trainings>> GetDbTrainings()

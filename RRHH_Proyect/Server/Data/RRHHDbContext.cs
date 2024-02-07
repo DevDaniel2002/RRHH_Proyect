@@ -19,6 +19,9 @@ namespace RRHH_Proyect.Server.Data
 
         public DbSet<TrainingTypes> TrainingTypes { get; set; }
         public DbSet<Trainings> Trainings { get; set; }
+        public DbSet<WorkExperience> WorkExperience { get; set; }
+        
+        public DbSet<Language> Language { get; set; }
 
 
     }

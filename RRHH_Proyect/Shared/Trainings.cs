@@ -13,9 +13,11 @@ namespace RRHH_Proyect.Shared
         public DateTime? DateFrom { get; set; }
         public DateTime? DateTo { get; set; }
         public string Institution { get; set; }
+        public int? CandidateId { get; set; }
         public bool IsActive { get; set; }
-
         public int TrainingTypeId { get; set; }
+
         public TrainingTypes TrainingType { get; set; }
+        public Candidate Candidate { get; set; }
     }
 }

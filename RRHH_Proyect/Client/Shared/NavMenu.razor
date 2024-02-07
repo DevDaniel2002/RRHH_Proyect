@@ -7,10 +7,23 @@
         <MudText Typo="Typo.h6" Class="px-4">RRHH</MudText>
         <MudDivider Class="my-2" />
         <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-        <MudNavGroup Title="Configuration" Icon="@Icons.Material.Filled.Settings" Expanded="true">
-            <MudNavLink Href="/training" Icon="@Icons.Material.Filled.Add">Competencias</MudNavLink>
-            <MudNavLink Href="/trainingtypes" Icon="@Icons.Material.Filled.Add">Tipos de Competencias</MudNavLink>
+        <MudNavGroup Title="Competencias" Icon="@Icons.Material.Filled.Settings" Expanded="false">
+            <MudNavLink Href="/TrainingForm" Icon="@Icons.Material.Filled.Add">Agregar Competencias</MudNavLink>
+            <MudNavLink Href="/TrainingList" Icon="@Icons.Material.Filled.List">Consultar competencias</MudNavLink>
+            <MudNavGroup Title="Tipo de competencia" Icon="@Icons.Material.Filled.SettingsApplications">
+                <MudNavLink Href="/TrainingTypesForm" Icon="@Icons.Material.Filled.Add">Agregar Tipos de Competencias</MudNavLink>
+                <MudNavLink Href="/TrainingTypesList" Icon="@Icons.Material.Filled.List">Consultar Tipos de Competencias</MudNavLink>
+            </MudNavGroup>
         </MudNavGroup>
+        <MudNavGroup Title="Experiencias de Trabajo" Icon="@Icons.Material.Filled.Work">
+            <MudNavLink Href="/WorkExperienceForm" Icon="@Icons.Material.Filled.Add"> Agregar</MudNavLink>
+            <MudNavLink Href="/WorkExperienceList" Icon="@Icons.Material.Filled.List">Consultar</MudNavLink>
+        </MudNavGroup>
+           <MudNavGroup Title="Idiomas" Icon="@Icons.Material.Filled.Language">
+            <MudNavLink Href="/LanguageForm" Icon="@Icons.Material.Filled.Add"> Agregar</MudNavLink>
+            <MudNavLink Href="/LanguageList" Icon="@Icons.Material.Filled.List">Consultar</MudNavLink>
+        </MudNavGroup>
+
     </MudNavMenu>
 </MudPaper>
 

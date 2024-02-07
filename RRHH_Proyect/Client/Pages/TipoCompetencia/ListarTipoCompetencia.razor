@@ -1,0 +1,100 @@
+﻿@page "/TrainingTypesList"
+@inject HttpClient HttpClient
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+    <MudText Typo="Typo.h3" Class="pt-4">Tipo de Competencias</MudText>
+
+    <MudTable Items="TrainingTypesList.FindAll(x => x.IsActive == true)" Hover="true" Striped="true" OnRowClick="(TableRowClickEventArgs<TrainingTypes> args) => RowClicked(args)">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Tipo de Competencia</MudText>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Id</MudTh>
+            <MudTh>Tipo</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Id</MudTd>
+            <MudTd>@context.Type</MudTd>
+            <MudTd> <MudFab Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => DeleteTrainingType(context)" /></MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+
+</MudContainer>
+
+
+
+@code {
+    public List<TrainingTypes> TrainingTypesList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await GetAllTrainingTypes();
+        }
+        catch(Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Tipo de Competencia", parameter);
+            var resultDialog = await dialog.Result;
+
+        }
+    }
+
+    private async Task GetAllTrainingTypes()
+    {
+        var result = await HttpClient.GetFromJsonAsync<List<TrainingTypes>>("api/TrainingTypes/GetAllTrainingTypes");
+
+        if (result?.Count > 0)
+            TrainingTypesList = result;
+    }
+
+    private async Task DeleteTrainingType(TrainingTypes trainingTypeToDelete)
+    {
+        try
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", "Seguro que deseas eliminar este registro");
+            var dialog = DialogService.Show<ConfirmationDialog>("Tipos de Competencias", parameter);
+            var resultDialog = await dialog.Result;
+
+            if (!resultDialog.Canceled)
+            {
+                var result = await HttpClient.DeleteAsync($"api/TrainingTypes/DeleteTrainingType{trainingTypeToDelete.Id}");
+
+                if (result.IsSuccessStatusCode)
+                {
+                    parameter = new DialogParameters();
+                    parameter.Add("Message", "Tipo de Competencia eliminada");
+                    dialog = DialogService.Show<SuccessDialog>("Tipo de competencia", parameter);
+                    resultDialog = await dialog.Result;
+                    await GetAllTrainingTypes();
+                }
+                else
+                {
+                    throw new Exception(result.StatusCode.ToString());
+                }
+            }
+        }
+        catch(Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Tipo de competencia", parameter);
+            var resultDialog = await dialog.Result;
+        }
+    }
+
+    private async Task RowClicked(TableRowClickEventArgs<TrainingTypes> args)
+    {
+        NavigationManager.NavigateTo($"TrainingTypeForm/{args.Item.Id}");
+    }
+
+}
