@@ -1,0 +1,115 @@
+﻿@page "/EmployeeList"
+@inject HttpClient HttpClient
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+    <MudText Typo="Typo.h3" Class=" pt-4"> Empledos </MudText>
+
+    <MudTable Items="EmployeeList.FindAll(x=>x.IsActive == true)" Hover="true" Striped="true" OnRowClick="(TableRowClickEventArgs<Employee> args) => RowClicked(args)">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Empleados </MudText>
+
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Nombre</MudTh>
+            <MudTh>Apellido</MudTh>
+            <MudTh>Cedula</MudTh>
+            <MudTh>Departmento</MudTh>
+            <MudTh>Posición</MudTh>
+            <MudTh>Salario</MudTh>
+            <MudTh>Fecha de Ingreso</MudTh>
+
+
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.Surname</MudTd>
+            <MudTd>@context.IdentificationNumber</MudTd>
+            <MudTd>@context.Department.Name</MudTd>
+            <MudTd>@context.Position.Name</MudTd>
+            <MudTd>@context.Salary.ToString("#,##0.00")</MudTd>
+            <MudTd>@context.HiringDate?.ToString("dd/MM/yyyy")</MudTd>
+            <MudTd> <MudFab Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.Delete" OnClick="()=>DeleteEmployee(context)" /> </MudTd>
+
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    public List<Employee> EmployeeList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await GetEmployees();
+
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Empleados", parameter);
+            var resultDialog = await dialog.Result;
+        }
+    }
+
+    private async Task GetEmployees()
+    {
+        var result = await HttpClient.GetFromJsonAsync<List<Employee>>("api/Employees/GetEmployees");
+
+        if (result?.Count > 0)
+            EmployeeList = result;
+    }
+
+    private async Task DeleteEmployee(Employee employee)
+    {
+        try
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", "Seguro que desea eliminar esta información?");
+            var dialog = DialogService.Show<ConfirmationDialog>("Empleados", parameter);
+            var resultDialog = await dialog.Result;
+
+            if (!resultDialog.Canceled)
+            {
+
+                var result = await HttpClient.DeleteAsync($"api/Employees/DeleteEmployee/{employee.Id}");
+
+
+                if (result.IsSuccessStatusCode)
+                {
+                    parameter = new DialogParameters();
+                    parameter.Add("Message", "Empleado Eliminado");
+                    dialog = DialogService.Show<SuccessDialog>("Empleados", parameter);
+                    resultDialog = await dialog.Result;
+                    await GetEmployees();
+                }
+                else
+                {
+                    throw new Exception(result.StatusCode.ToString());
+                }
+            }
+
+
+
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Empleados", parameter);
+            var resultDialog = await dialog.Result;
+        }
+    }
+
+    private async Task RowClicked(TableRowClickEventArgs<Employee> args)
+    {
+        NavigationManager.NavigateTo($"EmployeeForm/{args.Item.Id}");
+    }
+}
