@@ -22,7 +22,10 @@ namespace RRHH_Proyect.Server.Data
         public DbSet<WorkExperience> WorkExperience { get; set; }
         
         public DbSet<Language> Language { get; set; }
-
+        public DbSet<User> User{ get; set; }
+        public DbSet<Department> Department{ get; set; }
+        public DbSet<Position> Position{ get; set; }
+        public DbSet<Employee> Employee{ get; set; }
 
     }
 }

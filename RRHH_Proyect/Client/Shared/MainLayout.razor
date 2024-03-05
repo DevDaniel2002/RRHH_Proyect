@@ -5,7 +5,7 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Color="Color.Error">
+    <MudAppBar Color="Color.Info">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         RRHH
         <MudSpacer />
@@ -13,7 +13,7 @@
             <MudMenuItem>Profile</MudMenuItem>
             <MudMenuItem>My account</MudMenuItem>            
         </MudMenu>
-        <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" />
+        <MudIconButton Icon="@Icons.Material.Filled.Logout" Href="/" Color="Color.Inherit" />
     </MudAppBar>
     <MudDrawer @bind-Open="@_drawerOpen">
         <NavMenu />
