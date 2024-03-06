@@ -1,0 +1,118 @@
+﻿@page "/PositionForm"
+@page "/PositionForm/{Id}"
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.Small" Style="margin-top:20px;">
+    <MudText Align="Align.Left" Typo="Typo.h3">Posición</MudText>
+    <center>
+        <MudForm @ref="mudForm">
+            <MudPaper Height="600px" Width="100%">
+                <MudContainer MaxWidth="MaxWidth.Small">
+                    <MudIconButton Icon="@Icons.Material.Filled.Work" Color="Color.Inherit" />
+                    <MudTextField Required="true" RequiredError="Campo Requerido" @bind-Value="position.Name" Label="Nombre" Variant="Variant.Outlined" /><br />
+                    <MudTextField Required="true" RequiredError="Campo Requerido" @bind-Value="position.Description" Label="Descripción" Variant="Variant.Outlined" /><br />
+
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Large" OnClick="NavigateToIndex">Cancelar</MudButton>
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Send" Color="Color.Success" Size="Size.Large" OnClick="SaveChanges">Guardar Cambios</MudButton>
+                </MudContainer>
+                @if (ProgressBar)
+                {
+                    <br />
+                    <MudProgressCircular Color="Color.Info" Size="Size.Medium" Indeterminate="true" />
+                }
+            </MudPaper>
+        </MudForm>
+    </center>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private bool ProgressBar = false;
+
+    RRHH_Proyect.Shared.Position position = new();
+
+    MudForm? mudForm;
+
+    private int ID = 0;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            ProgressBar = true;
+            if (!string.IsNullOrEmpty(Id))
+            {
+                if (int.TryParse(Id, out int id))
+                {
+                    var result = await HttpClient.GetFromJsonAsync<RRHH_Proyect.Shared.Position>($"api/Positions/GetPositionsById/{id}");
+
+                    if (result == null)
+                        throw new Exception("Objeto no encontrado");
+
+                    position = result;
+                }
+
+            }
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Posiciones", parameter);
+            var resultDialog = await dialog.Result;
+        }
+        finally
+        {
+            ProgressBar = false;
+        }
+    }
+
+    private void NavigateToIndex() => NavigationManager.NavigateTo("/");
+
+    private async Task SaveChanges()
+    {
+        try
+        {
+            ProgressBar = true;
+            var result = new HttpResponseMessage();
+
+            mudForm?.Validate();
+
+            if (mudForm.IsValid)
+            {
+                if (!string.IsNullOrEmpty(Id))
+                    result = await HttpClient.PutAsJsonAsync<RRHH_Proyect.Shared.Position>($"api/Positions/UpdatePosition({position.Id})", position);
+                else
+                    result = await HttpClient.PostAsJsonAsync<RRHH_Proyect.Shared.Position>("api/Positions/PostPosition", position);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var parameter = new DialogParameters();
+                    parameter.Add("Message", string.IsNullOrEmpty(Id) ? "Posición Registrada" : "Posición Actualizada");
+                    var dialog = DialogService.Show<SuccessDialog>("Posiciones", parameter);
+                    var resultDialog = await dialog.Result;
+                    NavigationManager.NavigateTo("PositionList");
+                }
+            }
+
+
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Posiciones", parameter);
+            var resultDialog = await dialog.Result;
+        }
+        finally
+        {
+            ProgressBar = false;
+        }
+
+
+    }
+}

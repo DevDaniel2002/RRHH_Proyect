@@ -1,0 +1,112 @@
+﻿@layout LoginLayout
+@page "/"
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+@if (showAlert)
+{
+    <MudAlert ShowCloseIcon="true" CloseIconClicked="(() => CloseAlert(false))" Severity="Severity.Error" Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center">@errorMessage</MudAlert>
+}
+<MudPaper Height="500px" Width="100%">
+    <MudContainer MaxWidth="MaxWidth.Small">
+        <MudIconButton Icon="@Icons.Material.Filled.AirplanemodeActive" Color="Color.Inherit" />
+        <MudTextField Required="true" @bind-Value="loginRequest.UserName" Placeholder="User" Label="User" Variant="Variant.Outlined"></MudTextField><br />
+        <MudTextField Required="true" @bind-Value="loginRequest.Password" Label="Password" Placeholder="Password" Variant="Variant.Outlined" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password"></MudTextField>
+        <br />
+        <MudLink Href="#" Typo="Typo.body2">Olvide mi contraseña</MudLink>
+        <br /><br />
+        <MudButton OnClick="(() =>LogIn())" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Login" Color="Color.Info" Size="Size.Large">Sign In</MudButton>
+    </MudContainer>
+    @if (OverLay)
+    {
+        <br />
+        <MudProgressCircular Color="Color.Info" Size="Size.Medium" Indeterminate="true" />
+    }
+</MudPaper>
+@* <MudOverlay @bind-Visible="OverLay" DarkBackground="true" AutoClose="true" /> *@
+
+@code {
+    private string? UserName { get; set; } = string.Empty;
+    private string? Password { get; set; } = string.Empty;
+
+    private string errorMessage { get; set; } = string.Empty;
+
+
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+    private bool show;
+    private bool showAlert = false;
+    private bool OverLay = false;
+
+    LoginRequest loginRequest = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // var result = await HttpClient.PostAsJsonAsync<User>("api/Users/PostUser", new User() { Username = "willys", Password = "probando", IsActive = true });
+
+        // if (result.IsSuccessStatusCode)
+        // {
+        //     Console.WriteLine("Hello");
+        // }
+    }
+
+    private void CloseAlert(bool close)
+    {
+        if (showAlert)
+        {
+            showAlert = close;
+        }
+    }
+
+    private void ShowPassword()
+    {
+        if (show)
+        {
+            show = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            show = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    private async Task LogIn()
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(loginRequest.UserName) && !string.IsNullOrEmpty(loginRequest.Password))
+            {
+                OverLay = true;
+                var result = await HttpClient.PostAsJsonAsync<LoginRequest>("api/Users/Login", loginRequest);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    NavigationManager.NavigateTo("index");
+                    
+                }
+                else
+                    throw new Exception($"{result.StatusCode}: Fallo en Login, Verificar Credenciales");
+            }
+            else
+            {
+                errorMessage = "Todos los campos son requeridos";
+                showAlert = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Login", parameter);
+            var resultDialog = await dialog.Result;
+        }
+        finally
+        {
+            OverLay = false;
+        }
+    }
+}

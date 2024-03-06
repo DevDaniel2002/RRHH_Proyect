@@ -1,0 +1,105 @@
+﻿@page "/LanguageList"
+@inject HttpClient HttpClient
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+    <MudText Typo="Typo.h3" Class=" pt-4"> Idiomas </MudText>
+
+    <MudTable Items="LanguagesList.FindAll(x=>x.IsActive == true)" Hover="true" Striped="true" OnRowClick="(TableRowClickEventArgs<Language> args) => RowClicked(args)">
+
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Idiomas </MudText>
+
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Nombre</MudTh>
+            <MudTh>Nivel</MudTh>
+
+
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+                <MudTd>@context.Level</MudTd>
+
+
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    </MudContainer>
+
+    @code {
+    public List<Language> LanguagesList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await GetLanguage();
+
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Idioma", parameter);
+            var resultDialog = await dialog.Result;
+        }
+    }
+
+    private async Task GetLanguage()
+    {
+        var result = await HttpClient.GetFromJsonAsync<List<Language>>("api/Language/GetLanguage");
+
+        if (result?.Count > 0)
+            LanguagesList = result;
+    }
+
+    private async Task DeleteExperience(Language experienceToDelete)
+    {
+        try
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", "Seguro que desea eliminar esta información?");
+            var dialog = DialogService.Show<ConfirmationDialog>("Idiomas", parameter);
+            var resultDialog = await dialog.Result;
+
+            if (!resultDialog.Canceled)
+            {
+
+                var result = await HttpClient.DeleteAsync($"api/Language/DeleteLanguage/{experienceToDelete.Id}");
+
+                if (result.IsSuccessStatusCode)
+                {
+                    parameter = new DialogParameters();
+                    parameter.Add("Message", "Idioma Eliminado");
+                    dialog = DialogService.Show<SuccessDialog>("Idioma", parameter);
+                    resultDialog = await dialog.Result;
+                    await GetLanguage();
+                }
+                else
+                {
+                    throw new Exception(result.StatusCode.ToString());
+                }
+            }
+
+
+
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Idiomas", parameter);
+            var resultDialog = await dialog.Result;
+        }
+    }
+
+    private async Task RowClicked(TableRowClickEventArgs<Language> args)
+    {
+        NavigationManager.NavigateTo($"LanguageForm/{args.Item.Id}");
+    }
+}

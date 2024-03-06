@@ -7,7 +7,7 @@ using System;
 
 namespace RRHH_Proyect.Server.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/TrainingTypes")]
     [ApiController]
     public class TrainingTypeController : ControllerBase
     {
@@ -18,32 +18,44 @@ namespace RRHH_Proyect.Server.Controllers
             _context = context;
         }
 
-        [HttpGet]
+        [HttpGet("GetAllTrainingTypes")]
         public async Task<ActionResult<List<TrainingTypes>>> GetAllTrainingTypes()
         {
-            var list = await _context.TrainingTypes
-                .Where(t => t.IsActive)
-                .ToListAsync();
-
-            return Ok(list);
-        }
-
-        [HttpGet]
-        [Route("{Id}")]
-        public async Task<ActionResult<List<TrainingTypes>>> GetTrainingTypeById(int Id)
-        {
-            var trainingType = await _context.TrainingTypes
-                .Where(t => t.Id == Id && t.IsActive) 
-                .FirstOrDefaultAsync();
-
-            if (trainingType == null)
+            try
             {
-                return NotFound(" /");
+                var list = await _context.TrainingTypes
+                    .Where(t => t.IsActive)
+                    .ToListAsync();
+
+                return Ok(list);
+
             }
-            return Ok(trainingType);
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
         }
 
-        [HttpPost]
+        [HttpGet("GetTrainingTypeById")]
+        [Route("{Id}")]
+        public async Task<ActionResult<TrainingTypes>> GetTrainingTypeById(int Id)
+        {
+            try
+            {
+                var trainingType = await _context.TrainingTypes
+                    .Where(t => t.Id == Id && t.IsActive)
+                    .FirstOrDefaultAsync();
+                return Ok(trainingType);
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("CreateTrainingType")]
         public async Task<ActionResult<TrainingTypes>> CreateTrainingType(TrainingTypes trainingTypes)
         {
 
@@ -56,22 +68,29 @@ namespace RRHH_Proyect.Server.Controllers
         }
 
 
-        [HttpPut("{Id}")]
+        [HttpPut("UpdateTrainingType/{Id}")]
         public async Task<ActionResult<List<TrainingTypes>>> UpdateTrainingType(TrainingTypes trainingTypes)
         {
-            var obj = await _context.TrainingTypes.FindAsync(trainingTypes.Id);
-            if (obj == null)
-                return BadRequest("No se encuentra el Objeto");
-            obj.Type = trainingTypes.Type;
+            try
+            {
+                var result = await _context.TrainingTypes.FindAsync(trainingTypes.Id);
+                if (result == null)
+                    return BadRequest("No se encuentra el Objeto");
+                result.Type = trainingTypes.Type;
 
 
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
-            return Ok(await _context.TrainingTypes.ToListAsync());
+                return Ok(await _context.TrainingTypes.ToListAsync());
+
+            }
+            catch(Exception ex) 
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        [HttpDelete]
-        [Route("{Id}")]
+        [HttpDelete("DeleteTrainingType/{id}")]
         public async Task<ActionResult<List<TrainingTypes>>> DeleteTrainingType(int Id)
         {
             var obj = await _context.TrainingTypes.FirstOrDefaultAsync(Ob => Ob.Id == Id);
