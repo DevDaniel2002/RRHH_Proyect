@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RRHH_Proyect.Server.Data;
 
@@ -11,9 +12,10 @@ using RRHH_Proyect.Server.Data;
 namespace RRHH_Proyect.Server.Migrations
 {
     [DbContext(typeof(RRHHDbContext))]
-    partial class RRHHDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240306075800_reverseLastUpdate")]
+    partial class reverseLastUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

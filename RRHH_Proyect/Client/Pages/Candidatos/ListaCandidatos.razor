@@ -1,0 +1,120 @@
+﻿@page "/CandidateList"
+@inject HttpClient HttpClient
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+    <MudText Typo="Typo.h3" Class="pt-4">Candidatos</MudText>
+
+    <MudTable Items="candidateList.FindAll(x => x.IsActive == true)" Hover="true" Striped="true" OnRowClick="(TableRowClickEventArgs<Candidate> args) => RowClicked(args)">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Candidato</MudText>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Nombre</MudTh>
+            <MudTh>Apellido</MudTh>
+            <MudTh>Cedula</MudTh>
+            <MudTh>Departmento</MudTh>
+            <MudTh>Posición Deseada</MudTh>
+            <MudTh>Salario</MudTh>
+            <MudTh>Capacitacion</MudTh>
+            <MudTh>Experencia Laboral</MudTh>
+            <MudTh>Idioma</MudTh>
+            <MudTh>Nivel de Idioma</MudTh>
+            <MudTh>Recomendado Por</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.Surname</MudTd>
+            <MudTd>@context.Cedula</MudTd>
+            <MudTd>@context.Department.Name</MudTd>
+            <MudTd>@context.DesiredPositionNavigation.Name</MudTd>
+            <MudTd>@context.DesiredSalary.ToString("#,##0.00")</MudTd>
+            <MudTd>@context.TrainingId</MudTd>
+            <MudTd>@context.WorkExperience.Id</MudTd>
+            <MudTd>@context.Language.Name</MudTd>
+            <MudTd>@context.Language.Level</MudTd>
+            <MudTd>@context.RecommendFor</MudTd>
+            <MudTd> 
+                <MudFab Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.Delete" OnClick="()=>DeleteEmployee(context)" /> 
+            </MudTd>
+
+        </RowTemplate>
+    </MudTable>
+</MudContainer>
+
+
+@code {
+    public List<Candidate> candidateList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await GetCandidate();
+
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Candidato", parameter);
+            var resultDialog = await dialog.Result;
+        }
+    }
+
+    private async Task GetCandidate()
+    {
+        var result = await HttpClient.GetFromJsonAsync<List<Candidate>>("api/Candidates/GetAllCandidates");
+
+        if (result?.Count > 0)
+            candidateList = result;
+    }
+
+    private async Task DeleteEmployee(Candidate candidate)
+    {
+        try
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", "¿Seguro que desea eliminar esta información?");
+            var dialog = DialogService.Show<ConfirmationDialog>("Candidato", parameter);
+            var resultDialog = await dialog.Result;
+
+            if (!resultDialog.Canceled)
+            {
+
+                var result = await HttpClient.DeleteAsync($"api/Candidate/DeleteCandidate/{candidate.Id}");
+
+
+                if (result.IsSuccessStatusCode)
+                {
+                    parameter = new DialogParameters();
+                    parameter.Add("Message", "Candidato Eliminado");
+                    dialog = DialogService.Show<SuccessDialog>("Candidato", parameter);
+                    resultDialog = await dialog.Result;
+                    await GetCandidate();
+                }
+                else
+                {
+                    throw new Exception(result.StatusCode.ToString());
+                }
+            }
+
+
+
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Empleados", parameter);
+            var resultDialog = await dialog.Result;
+        }
+    }
+
+
+    private async Task RowClicked(TableRowClickEventArgs<Candidate> args)
+    {
+        NavigationManager.NavigateTo($"CandidateForm/{args.Item.Id}");
+    }
+}

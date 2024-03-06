@@ -12,8 +12,8 @@ namespace RRHH_Proyect.Shared
         public int Cedula { get; set; }
         public string Name { get; set; }
         public string Surname { get; set; }
-        //public int DepartmentId { get; set; }
-        //public int DesiredPosition { get; set; }
+        public int DepartmentId { get; set; }
+        public int DesiredPosition { get; set; }
         public int DesiredSalary { get; set; }
         public int TrainingId { get; set; }
         public int WorkExperienceId { get; set; }
@@ -21,8 +21,8 @@ namespace RRHH_Proyect.Shared
         public string RecommendFor { get; set; }
         public bool IsActive { get; set; }
 
-        //public Department Department { get; set; }
-        //public Position DesiredPositionNavigation { get; set; }
+        public Department Department { get; set; }
+        public Position DesiredPositionNavigation { get; set; }
         public Language Language { get; set; }
         public ICollection<Trainings> Trainings { get; set; }
         public WorkExperience WorkExperience { get; set; }

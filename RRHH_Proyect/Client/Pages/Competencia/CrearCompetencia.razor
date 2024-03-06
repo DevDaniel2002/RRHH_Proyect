@@ -90,7 +90,7 @@
         }
     }
 
-    private void NavigateToIndex() => NavigationManager.NavigateTo("TrainingList");
+    private void NavigateToIndex() => NavigationManager.NavigateTo("CandidateForm");
 
     private async Task SaveChange()
     {
@@ -116,7 +116,7 @@
                         parameter.Add("Message", string.IsNullOrEmpty(Id) ? "Competencia registrada" : "Competencia Actualizada");
                         var dialog = DialogService.Show<SuccessDialog>("Competencia", parameter);
                         var resultDialog = await dialog.Result;
-                        NavigationManager.NavigateTo("TrainingList");
+                        NavigationManager.NavigateTo("CandidateForm");
                     }
                 }
             }

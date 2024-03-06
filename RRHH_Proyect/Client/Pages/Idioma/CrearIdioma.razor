@@ -70,7 +70,7 @@
         }
     }
 
-    private void NavigateToIndex() => NavigationManager.NavigateTo("/");
+    private void NavigateToIndex() => NavigationManager.NavigateTo("CandidateForm");
 
     private async Task SaveChanges()
     {
@@ -92,7 +92,9 @@
                 {
                     var parameter = new DialogParameters();
                     parameter.Add("Message", string.IsNullOrEmpty(Id) ? "Idioma registrado" : "Idioma Actualizado");
-
+                    var dialog = DialogService.Show<SuccessDialog>("Idiomas", parameter);
+                    var resultDialog = await dialog.Result;
+                    NavigationManager.NavigateTo("CandidateForm");
                 }
             }
 

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RRHH_Proyect.Server.Data;
 
@@ -11,9 +12,10 @@ using RRHH_Proyect.Server.Data;
 namespace RRHH_Proyect.Server.Migrations
 {
     [DbContext(typeof(RRHHDbContext))]
-    partial class RRHHDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240306075619_UpdateDeparment-Position")]
+    partial class UpdateDeparmentPosition
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -175,6 +177,9 @@ namespace RRHH_Proyect.Server.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -185,6 +190,8 @@ namespace RRHH_Proyect.Server.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DepartmentId");
 
                     b.ToTable("Position");
                 });
@@ -349,6 +356,17 @@ namespace RRHH_Proyect.Server.Migrations
                     b.Navigation("Position");
                 });
 
+            modelBuilder.Entity("RRHH_Proyect.Shared.Position", b =>
+                {
+                    b.HasOne("RRHH_Proyect.Shared.Department", "Department")
+                        .WithMany("Positions")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Department");
+                });
+
             modelBuilder.Entity("RRHH_Proyect.Shared.Trainings", b =>
                 {
                     b.HasOne("RRHH_Proyect.Shared.Candidate", "Candidate")
@@ -369,6 +387,11 @@ namespace RRHH_Proyect.Server.Migrations
             modelBuilder.Entity("RRHH_Proyect.Shared.Candidate", b =>
                 {
                     b.Navigation("Trainings");
+                });
+
+            modelBuilder.Entity("RRHH_Proyect.Shared.Department", b =>
+                {
+                    b.Navigation("Positions");
                 });
 #pragma warning restore 612, 618
         }

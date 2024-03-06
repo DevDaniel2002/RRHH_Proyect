@@ -27,5 +27,7 @@ namespace RRHH_Proyect.Server.Data
         public DbSet<Position> Position{ get; set; }
         public DbSet<Employee> Employee{ get; set; }
 
+        public DbSet<Candidate> Candidates { get; set; }
+
     }
 }
