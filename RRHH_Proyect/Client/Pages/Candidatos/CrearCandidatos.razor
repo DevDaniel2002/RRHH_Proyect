@@ -1,0 +1,64 @@
+﻿@page "/CandidateForm"
+@page "/CandidateForm/{Id}"
+@inject HttpClient httpClient
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.Small" Style="margin-top:20px">
+    <MudText Align="Align.Left" Typo="Typo.h3">Crear Candidato</MudText>
+    <center>
+        <MudForm @ref="mudForm"></MudForm>
+    </center>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private bool ProgressBar = false;
+
+    Candidate candidate = new();
+
+    List<Department> DepartmentsList = new();
+    List<RRHH_Proyect.Shared.Position> PositionsList = new();
+    List<Trainings> TrainingsList = new();
+    List<WorkExperience> WorkExperiencesList = new();
+    List<Language> LanguagesList = new();
+
+    MudForm? mudForm;
+
+    private int ID = 0;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            ProgressBar = true;
+            if (!string.IsNullOrEmpty(Id))
+            {
+                if(int.TryParse(Id, out int id))
+                {
+                    var result = await httpClient.GetFromJsonAsync<Candidate>($"");
+
+                    if (result == null)
+                        throw new Exception("Objeto no encontrado");
+
+                    candidate = result;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            var parameters = new DialogParameters();
+            parameters.Add("Message",ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Candidatos",parameters);
+            var resultDialog = await dialog.Result;
+        }
+        finally
+        {
+            ProgressBar = false;
+        }
+    }
+
+
+}
