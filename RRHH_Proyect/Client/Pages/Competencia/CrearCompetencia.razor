@@ -1,0 +1,139 @@
+﻿@page "/TrainingForm"
+@inject HttpClient HttpClient
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Small" Style="margin-top:20px;">
+    <MudText Align="Align.Left" Typo="Typo.h3">Competencia</MudText>
+    <center>
+        <MudForm @ref="mudForm">
+            <MudPaper MaxWidth="600px" Width="100%">
+                <MudContainer MaxWidth="MaxWidth.Small">
+                    <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" />
+                    <MudTextField Required="true" RequiredError="Campo Requerido" @bind-Value="training.Description" Label="Descripcion" Variant="Variant.Outlined" /><br />
+                    <MudSelect @bind-Value="training.TrainingTypeId" Label="Tipo" Variant="Variant.Outlined">
+                        @if (trainingTypes != null)
+                        {
+                            @foreach (var trainingType in trainingTypes)
+                            {
+                                <MudSelectItem Value="@trainingType.Id">@trainingType.Type</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                    <br />
+                    <MudDatePicker Required="true" RequiredError="Campo Requerido" @bind-Date="training.DateFrom" Label="Desde" Variant="Variant.Outlined" />
+                    <MudDatePicker Required="true" RequiredError="Campo Requerido" @bind-Date="training.DateTo" Label="Hasta" Variant="Variant.Outlined" />
+                    <MudTextField Required="true" RequiredError="Campo Requerido" @bind-Value="training.Institution" Label="Institution" Variant="Variant.Outlined" /><br />
+                    <br />
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Large" OnClick="NavigateToIndex">Cancelar</MudButton>
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Send" Color="Color.Success" Size="Size.Large" OnClick="SaveChange">Guardar Cambios</MudButton>
+                </MudContainer>
+                @if (ProgressBar)
+                {
+                    <br />
+                    <MudProgressCircular Color="Color.Info" Size="Size.Medium" Indeterminate="true" />
+                }
+            </MudPaper>
+        </MudForm>
+    </center>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+
+    private bool ProgressBar = false;
+
+    Trainings training = new();
+
+    private List<TrainingTypes>? trainingTypes;
+
+    MudForm? mudForm;
+
+    private int ID = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            ProgressBar = true;
+            var response = await HttpClient.GetFromJsonAsync<List<TrainingTypes>>("api/TrainingTypes/GetAllTrainingTypes");
+
+            if (response != null)
+            {
+                trainingTypes = response;
+            }
+
+            if (!string.IsNullOrEmpty(Id))
+            {
+                if (int.TryParse(Id, out int id))
+                {
+                    var result = await HttpClient.GetFromJsonAsync<Trainings>($"api/Trainings/GetTrainingById/{id}");
+
+                    if (result == null)
+                        throw new Exception("Objeto No Encontrado");
+
+                    training = result;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Competencia", parameter);
+            var resultDialog = await dialog.Result;
+        }
+        finally
+        {
+            ProgressBar = false;
+        }
+    }
+
+    private void NavigateToIndex() => NavigationManager.NavigateTo("CandidateForm");
+
+    private async Task SaveChange()
+    {
+        try
+        {
+            ProgressBar = true;
+            var result = new HttpResponseMessage();
+
+            if (mudForm != null)
+            {
+                mudForm.Validate();
+
+                if (mudForm.IsValid)
+                {
+                    if (!string.IsNullOrEmpty(Id))
+                        result = await HttpClient.PutAsJsonAsync<Trainings>("api/Trainings/UpdateTraining", training);
+                    else
+                        result = await HttpClient.PostAsJsonAsync<Trainings>("api/Trainings/CreateTraining", training);
+
+                    if (result.IsSuccessStatusCode)
+                    {
+                        var parameter = new DialogParameters();
+                        parameter.Add("Message", string.IsNullOrEmpty(Id) ? "Competencia registrada" : "Competencia Actualizada");
+                        var dialog = DialogService.Show<SuccessDialog>("Competencia", parameter);
+                        var resultDialog = await dialog.Result;
+                        NavigationManager.NavigateTo("CandidateForm");
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Tipos de Competencia", parameter);
+            var resultDialog = await dialog.Result;
+        }
+        finally
+        {
+            ProgressBar = false;
+        }
+    }
+
+
+}
+

@@ -1,0 +1,26 @@
+﻿<MudDialog>
+    <DialogContent>
+        <center><MudIcon Icon="@Icons.Material.Filled.Done" Color="Color.Success" Style="font-size: 4rem;" /></center>
+        <MudText Typo="Typo.h6">@Message </MudText>
+        </DialogContent>
+
+        <DialogActions>
+            <MudButton Color="Color.Success" @onclick="Close"> Ok</MudButton>
+        </DialogActions>
+    </MudDialog>
+
+    @code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Inject]
+    private IDialogService DialogService { get; set; }
+
+    [Parameter]
+    public string Message { get; set; }
+
+
+    private void Close() => MudDialog.Close();
+
+
+
+}

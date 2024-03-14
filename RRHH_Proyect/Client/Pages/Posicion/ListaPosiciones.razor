@@ -1,0 +1,104 @@
+﻿@page "/PositionList"
+@inject HttpClient HttpClient
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+    <MudText Typo="Typo.h3" Class=" pt-4"> Posiciones </MudText>
+
+    <MudTable Items="PositionList.FindAll(x=>x.IsActive == true)" Hover="true" Striped="true" OnRowClick="(TableRowClickEventArgs<RRHH_Proyect.Shared.Position> args) => RowClicked(args)">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Posiciones </MudText>
+
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Nombre</MudTh>
+            <MudTh>Descripción</MudTh>
+
+
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.Description</MudTd>
+            <MudTd> <MudFab Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.Delete" OnClick="()=>DeletePosition(context)" /> </MudTd>
+
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    public List<RRHH_Proyect.Shared.Position> PositionList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await GetPositions();
+
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Posiciones", parameter);
+            var resultDialog = await dialog.Result;
+        }
+    }
+
+    private async Task GetPositions()
+    {
+        var result = await HttpClient.GetFromJsonAsync<List<RRHH_Proyect.Shared.Position>>("api/Positions/GetPositions");
+
+        if (result?.Count > 0)
+            PositionList = result;
+    }
+
+    private async Task DeletePosition(RRHH_Proyect.Shared.Position position)
+    {
+        try
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", "Seguro que desea eliminar esta información?");
+            var dialog = DialogService.Show<ConfirmationDialog>("Posiciones", parameter);
+            var resultDialog = await dialog.Result;
+
+            if (!resultDialog.Canceled)
+            {
+
+                var result = await HttpClient.DeleteAsync($"api/Positions/DeletePosition/{position.Id}");
+
+                if (result.IsSuccessStatusCode)
+                {
+                    parameter = new DialogParameters();
+                    parameter.Add("Message", "Posición Eliminada");
+                    dialog = DialogService.Show<SuccessDialog>("Posicions", parameter);
+                    resultDialog = await dialog.Result;
+                    await GetPositions();
+                }
+                else
+                {
+                    throw new Exception(result.StatusCode.ToString());
+                }
+            }
+
+
+
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Posiciones", parameter);
+            var resultDialog = await dialog.Result;
+        }
+    }
+
+    private async Task RowClicked(TableRowClickEventArgs<RRHH_Proyect.Shared.Position> args)
+    {
+        NavigationManager.NavigateTo($"PositionForm/{args.Item.Id}");
+    }
+}

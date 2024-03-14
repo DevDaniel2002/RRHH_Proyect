@@ -1,0 +1,32 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider @ref="@_mudThemeProvider" @bind-IsDarkMode="@_isDarkMode" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudAppBar Color="Color.Info" Fixed="false">
+    <MudIconButton Icon="@Icons.Material.Filled.Domain" Color="Color.Inherit" Edge="Edge.Start" /> Human Resources Management
+    <MudSpacer />
+    <MudIconButton Icon="@Icons.Filled.Info" Color="Color.Inherit" />
+</MudAppBar>
+<MudMainContent>
+    <MudContainer MaxWidth="MaxWidth.Small">
+        <center>
+            @Body
+        </center>
+    </MudContainer>
+</MudMainContent>
+
+@code {
+    private bool _isDarkMode;
+    private MudThemeProvider _mudThemeProvider;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _isDarkMode = await _mudThemeProvider.GetSystemPreference();
+            StateHasChanged();
+        }
+    }
+}

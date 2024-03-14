@@ -1,0 +1,161 @@
+﻿@page "/EmployeeForm"
+@page "/EmployeeForm/{Id}"
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+<MudContainer MaxWidth="MaxWidth.Small" Style="margin-top:20px;">
+    <MudText Align="Align.Center" Typo="Typo.h3">Empleado</MudText>
+    <center>
+        <MudForm @ref="mudForm">
+            <MudPaper Height="700px" Width="100%">
+                <MudContainer MaxWidth="MaxWidth.Small">
+                    <MudIconButton Icon="@Icons.Material.Filled.Work" Color="Color.Inherit" />
+                    <MudTextField Required="true" RequiredError="Campo Requerido" @bind-Value="employee.Name" Label="Nombre" Variant="Variant.Outlined" /><br />
+                    <MudTextField Required="true" RequiredError="Campo Requerido" @bind-Value="employee.Surname" Label="Apellido" Variant="Variant.Outlined" /><br />
+                    <MudTextField Required="true" RequiredError="Campo Requerido" @bind-Value="employee.IdentificationNumber" Label="Cédula" Variant="Variant.Outlined" /><br />
+                    <MudNumericField Required="true" RequiredError="Campo Requerido" @bind-Value="employee.Salary" Label="Salario" Variant="Variant.Outlined" /><br />
+                    <MudDatePicker Required="true" RequiredError="Campo Requerido" @bind-Date="employee.HiringDate" Label="Fecha de contratación" Variant="Variant.Outlined" /><br />
+                    <MudSelect Required="true" RequiredError="Campo Requerido" @bind-Value="employee.DepartmentId" Label="Departamento" Variant="Variant.Outlined" >
+                        @foreach(var item in departmentList)
+                        {
+                            <MudSelectItem Value="item.Id">@item.Name</MudSelectItem>
+                        }
+                    </MudSelect><br />
+                    <MudSelect Required="true" RequiredError="Campo Requerido" @bind-Value="employee.PositionId" Label="Posición" Variant="Variant.Outlined">
+                        @foreach (var item in positionList)
+                        {
+                            <MudSelectItem Value="item.Id">@item.Name</MudSelectItem>
+                        }
+                    </MudSelect><br />
+                    <br />
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Large" OnClick="NavigateToIndex">Cancelar</MudButton>
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Send" Color="Color.Success" Size="Size.Large" OnClick="SaveChanges">Guardar Cambios</MudButton>
+                    @if (ProgressBar)
+                    {
+                        <br />
+                        <MudProgressCircular Color="Color.Info" Size="Size.Medium" Indeterminate="true" />
+                    }
+                </MudContainer>
+                
+            </MudPaper>
+        </MudForm>
+    </center>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private bool ProgressBar = false;
+
+    Employee employee = new();
+
+    Department department = new();
+    RRHH_Proyect.Shared.Position position = new();
+
+    List<Department> departmentList = new();
+    List<RRHH_Proyect.Shared.Position> positionList = new();
+
+    MudForm? mudForm;
+
+    private int ID = 0;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            ProgressBar = true;
+            if (!string.IsNullOrEmpty(Id))
+            {
+                if (int.TryParse(Id, out int id))
+                {
+                    var result = await HttpClient.GetFromJsonAsync<Employee>($"api/Employees/GetEmployeesById/{id}");
+
+                    if (result == null)
+                        throw new Exception("Objeto no encontrado");
+
+                    employee = result;
+
+                }
+
+            }
+            var departments = await HttpClient.GetFromJsonAsync<List<Department>>($"api/Departments/GetDepartments");
+            if (departments != null && departments.Count > 0)
+            {
+                departmentList = departments;
+            }
+            else
+                throw new Exception("No se encotraron Departamentos");
+
+            var positions = await HttpClient.GetFromJsonAsync<List<RRHH_Proyect.Shared.Position>>($"api/Positions/GetPositions");
+
+            if (positions != null && positions.Count > 0)
+            {
+                positionList = positions;
+            }
+            else
+                throw new Exception("No se encotraron Posiciones");
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Empleados", parameter);
+            var resultDialog = await dialog.Result;
+        }
+        finally
+        {
+            ProgressBar = false;
+        }
+    }
+
+    private void NavigateToIndex() => NavigationManager.NavigateTo("/");
+
+    private async Task SaveChanges()
+    {
+        try
+        {
+            ProgressBar = true;
+            var result = new HttpResponseMessage();
+
+            mudForm?.Validate();
+
+            if (mudForm.IsValid)
+            {
+                // employee.Position = positionList.FirstOrDefault(x=>x.Id == employee.PositionId);
+                // employee.Department = departmentList.FirstOrDefault(x => x.Id == employee.DepartmentId);
+
+                if (!string.IsNullOrEmpty(Id))
+                    result = await HttpClient.PutAsJsonAsync<Employee>("api/Employees/UpdateEmployee", employee);
+                else
+                    result = await HttpClient.PostAsJsonAsync<Employee>("api/Employees/PostEmployee", employee);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var parameter = new DialogParameters();
+                    parameter.Add("Message", string.IsNullOrEmpty(Id) ? "Empleado Registrado" : "Empleado Actualizado");
+                    var dialog = DialogService.Show<SuccessDialog>("Empleados", parameter);
+                    var resultDialog = await dialog.Result;
+                    NavigationManager.NavigateTo("EmployeeList");
+                }
+                else
+                    throw new Exception("Error registrando empleado");
+            }
+
+
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Empleados", parameter);
+            var resultDialog = await dialog.Result;
+        }
+        finally
+        {
+            ProgressBar = false;
+        }
+
+
+    }
+}

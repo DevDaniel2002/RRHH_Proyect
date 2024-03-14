@@ -1,0 +1,104 @@
+﻿@page "/DepartmentList"
+@inject HttpClient HttpClient
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+    <MudText Typo="Typo.h3" Class=" pt-4"> Departamentos </MudText>
+
+    <MudTable Items="DepartmentsList.FindAll(x=>x.IsActive == true)" Hover="true" Striped="true" OnRowClick="(TableRowClickEventArgs<Department> args) => RowClicked(args)">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Departmentos </MudText>
+
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Nombre</MudTh>
+            <MudTh>Descripción</MudTh>
+            
+
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.Description</MudTd>            
+            <MudTd> <MudFab Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.Delete" OnClick="()=>DeleteDepartment(context)" /> </MudTd>
+
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    public List<Department> DepartmentsList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await GetDepartments();
+
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Departamentos", parameter);
+            var resultDialog = await dialog.Result;
+        }
+    }
+
+    private async Task GetDepartments()
+    {
+        var result = await HttpClient.GetFromJsonAsync<List<Department>>("api/Departments/GetDepartments");
+
+        if (result?.Count > 0)
+            DepartmentsList = result;
+    }
+
+    private async Task DeleteDepartment(Department department)
+    {
+        try
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", "Seguro que desea eliminar esta información?");
+            var dialog = DialogService.Show<ConfirmationDialog>("Departamentos", parameter);
+            var resultDialog = await dialog.Result;
+
+            if (!resultDialog.Canceled)
+            {
+
+                var result = await HttpClient.DeleteAsync($"api/Departments/DeleteDepartment/{department.Id}");
+
+                if (result.IsSuccessStatusCode)
+                {
+                    parameter = new DialogParameters();
+                    parameter.Add("Message", "Departamento Eliminado");
+                    dialog = DialogService.Show<SuccessDialog>("Departamentos", parameter);
+                    resultDialog = await dialog.Result;
+                    await GetDepartments();
+                }
+                else
+                {
+                    throw new Exception(result.StatusCode.ToString());
+                }
+            }
+
+
+
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Departamentos", parameter);
+            var resultDialog = await dialog.Result;
+        }
+    }
+
+    private async Task RowClicked(TableRowClickEventArgs<Department> args)
+    {
+        NavigationManager.NavigateTo($"DepartmemtForm/{args.Item.Id}");
+    }
+}

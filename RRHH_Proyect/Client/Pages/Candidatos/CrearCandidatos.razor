@@ -5,9 +5,53 @@
 @inject IDialogService DialogService
 
 <MudContainer MaxWidth="MaxWidth.Small" Style="margin-top:20px">
+<<<<<<< HEAD
     <MudText Align="Align.Left" Typo="Typo.h3">Crear Candidato</MudText>
     <center>
         <MudForm @ref="mudForm"></MudForm>
+=======
+    <MudText Align="Align.Left" Typo="Typo.h3">Candidato</MudText>
+    <center>
+        <MudForm @ref="mudForm">
+            <MudPaper Height="900px" Width="100%">
+                <MudContainer MaxWidth="MaxWidth.Small">
+                    <MudIconButton Icon="@Icons.Material.Filled.Person" Color="Color.Inherit" />
+                    <MudTextField Required="true" RequiredError="Campo Requerido" @bind-Value="candidate.Name" Label="Nombre" Variant="Variant.Outlined" /> <br />
+                    <MudTextField Required="true" RequiredError="Campo Requerido" @bind-Value="candidate.Surname" Label="Apellido" Variant="Variant.Outlined" /> <br />
+                    <MudTextField Required="true" RequiredError="Campo Requerido" @bind-Value="candidate.Cedula" Label="Cedula" Variant="Variant.Outlined" /> <br />
+                    <MudSelect Required="true" RequiredError="Campo Requerido" @bind-Value="candidate.DepartmentId" Label="Idioma" Variant="Variant.Outlined">
+                        @if (DepartmentsList != null)
+                        {
+                            @foreach (var deparments in DepartmentsList)
+                            {
+                                <MudSelectItem Value="@deparments.Id">@deparments.Name</MudSelectItem>
+                            }
+                        }
+                    </MudSelect> <br />
+                    <MudSelect Required="true" RequiredError="Campo Requerido" @bind-Value="candidate.DesiredPosition" Label="Idioma" Variant="Variant.Outlined">
+                        @if (PositionsList != null)
+                        {
+                            @foreach (var positions in PositionsList)
+                            {
+                                <MudSelectItem Value="@positions.Id">@positions.Name</MudSelectItem>
+                            }
+                        }
+                    </MudSelect> <br />
+                    <MudTextField Required="true" RequiredError="Campo Requerido" @bind-Value="candidate.DesiredSalary" Label="Salario Deseado" Variant="Variant.Outlined" /> <br />
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.East" Color="Color.Primary" Size="Size.Medium" OnClick="NavigateToTrainingForm">Competencia</MudButton> <br />
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.East" Color="Color.Primary" Size="Size.Medium" OnClick="NavigateToLanguageForm">Idiomas</MudButton> <br />
+                    <MudTextField @bind-Value="candidate.RecommendFor" Label="Recomendado Por:" Variant="Variant.Outlined" /> <br />
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Large" OnClick="NavigateToIndex">Cancelar</MudButton>
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Send" Color="Color.Success" Size="Size.Large" OnClick="SaveChanges">Guardar Cambios</MudButton>
+                    @if (ProgressBar)
+                    {
+                        <br />
+                        <MudProgressCircular Color="Color.Info" Size="Size.Medium" Indeterminate="true" />
+                    }
+                </MudContainer>
+            </MudPaper>
+        </MudForm>
+>>>>>>> d100caa5faefc8e40c16b7096a46a49454ac6acf
     </center>
 </MudContainer>
 
@@ -21,9 +65,12 @@
 
     List<Department> DepartmentsList = new();
     List<RRHH_Proyect.Shared.Position> PositionsList = new();
+<<<<<<< HEAD
     List<Trainings> TrainingsList = new();
     List<WorkExperience> WorkExperiencesList = new();
     List<Language> LanguagesList = new();
+=======
+>>>>>>> d100caa5faefc8e40c16b7096a46a49454ac6acf
 
     MudForm? mudForm;
 
@@ -46,6 +93,39 @@
                     candidate = result;
                 }
             }
+<<<<<<< HEAD
+=======
+            var deparments = await httpClient.GetFromJsonAsync<List<Department>>($"api/Departments/GetDepartments");
+            if (deparments != null && deparments.Count > 0)
+            {
+                DepartmentsList = deparments;
+            }
+            else
+                throw new Exception("No se encotraron Departamentos");
+
+            var positions = await httpClient.GetFromJsonAsync<List<RRHH_Proyect.Shared.Position>>($"api/Positions/GetPositions");
+            if (positions != null && positions.Count > 0)
+            {
+                PositionsList = positions;
+            }
+            else
+                throw new Exception("No se encontraron Posiciones");
+
+            // var workExperiences = await httpClient.GetFromJsonAsync<List<WorkExperience>>($"api/WorkExperiences/GetWorkExperiences");
+            // if (workExperiences != null && workExperiences.Count > 0)
+            // {
+            //     WorkExperiencesList = workExperiences;   
+            // }
+            // else
+            //     throw new Exception("No se encontraron Experiencias");
+            // var languages = await httpClient.GetFromJsonAsync<List<Language>>($"api/Languague/GetLanguage");
+            // if (languages == null && languages.Count > 0)
+            // {
+            //     LanguagesList = languages;
+            // }
+            // else
+            //     throw new Exception("No se encontraron Idiomas");
+>>>>>>> d100caa5faefc8e40c16b7096a46a49454ac6acf
         }
         catch (Exception ex)
         {
@@ -60,5 +140,56 @@
         }
     }
 
+<<<<<<< HEAD
 
+=======
+    private void NavigateToIndex() => NavigationManager.NavigateTo("/");
+
+    private void NavigateToTrainingForm() => NavigationManager.NavigateTo("TrainingForm");
+    
+    private void NavigateToLanguageForm() => NavigationManager.NavigateTo("LanguageForm");
+
+
+    private async Task SaveChanges()
+    {
+        try
+        {
+            ProgressBar = true;
+            var result = new HttpResponseMessage();
+
+            mudForm?.Validate();
+
+            if (mudForm.IsValid)
+            {
+                if (!string.IsNullOrEmpty(Id))
+                    result = await httpClient.PutAsJsonAsync<Candidate>("", candidate);
+                else
+                    result = await httpClient.PostAsJsonAsync<Candidate>("", candidate);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var parameter = new DialogParameters();
+                    parameter.Add("Message", string.IsNullOrEmpty(Id) ? "Candidato Registrado" : "Candidato Actualizado");
+                    var dialog = DialogService.Show<SuccessDialog>("Candidato", parameter);
+                    var resultDialog = await dialog.Result;
+                    NavigationManager.NavigateTo("CandidateList");
+                }
+                else
+                    throw new Exception("Error registrando el Candidato");
+            }
+        }
+        catch (Exception ex)
+        {
+            var parameter = new DialogParameters();
+            parameter.Add("Message", ex.Message);
+            var dialog = DialogService.Show<ErrorDialog>("Candidatos", parameter);
+            var resultDialog = await dialog.Result;
+        }
+        finally
+        {
+            ProgressBar = false;
+        }
+    }
+    
+>>>>>>> d100caa5faefc8e40c16b7096a46a49454ac6acf
 }
