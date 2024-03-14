@@ -22,7 +22,6 @@ namespace RRHH_Proyect.Server.Controllers
             try
             {
                 var candidates = await DbContext.Candidates
-                    .Where(C => C.IsActive)
                     .ToListAsync();
 
                 return Ok(candidates);
